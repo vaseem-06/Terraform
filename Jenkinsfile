@@ -1,15 +1,10 @@
 pipeline {
     agent any
-    parameters {
-        string(name: 'FILENAME', defaultValue: 'animals.txt', description: 'Name of the file to create')
-        string(name: 'CONTENT', defaultValue: 'some animals are human friendly', description: 'Content of the file')
-    }
     environment {
-        SLACK_CHANNEL = '#jenkins-integration'   // replace with your channel
-        SLACK_CREDENTIALS = 'slack_integrations'   // Jenkins credential ID for Slack token
+        TFVARS = 'environment.tfvars'   // change only here if you rename file
     }
     stages {
-        stage('Checkout SCM') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/vaseem-06/Terraform.git'
             }
@@ -21,36 +16,25 @@ pipeline {
         }
         stage('Terraform Plan') {
             steps {
-                sh """
-                terraform plan -out=tfplan \
-                  -var="filename=${params.FILENAME}" \
-                  -var="content=${params.CONTENT}"
-                """
+                script {
+                    if (fileExists(env.TFVARS)) {
+                        sh "terraform plan -var-file=${env.TFVARS}"
+                    } else {
+                        sh "terraform plan"
+                    }
+                }
             }
         }
         stage('Terraform Apply') {
             steps {
-                input message: ":warning: Do you want to apply Terraform changes?"
-                sh 'terraform apply -auto-approve tfplan'
+                script {
+                    if (fileExists(env.TFVARS)) {
+                        sh "terraform apply -auto-approve -var-file=${env.TFVARS}"
+                    } else {
+                        sh "terraform apply -auto-approve"
+                    }
+                }
             }
-        }
-    }
-    post {
-        success {
-            echo ":white_check_mark: Terraform executed successfully. File: ${params.FILENAME}"
-            slackSend (
-                channel: "${env.SLACK_CHANNEL}",
-                color: '#36A64F',
-                message: ":white_check_mark: Terraform executed successfully!\n*File:* ${params.FILENAME}\n*Content:* ${params.CONTENT} (By Vaseem Mohammed)"
-            )
-        }
-        failure {
-            echo ":x: Terraform pipeline failed!"
-            slackSend (
-                channel: "${env.SLACK_CHANNEL}",
-                color: '#FF0000',
-                message: ":x: Terraform pipeline failed!"
-            )
         }
     }
 }
