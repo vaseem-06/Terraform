@@ -1,10 +1,7 @@
 variable "filename" {
-  description = "The name of the file"
-  type        = string
-  default     = "book.txt"
+  type = string
 }
+
 variable "content" {
-  description = "The content of the file"
-  type        = string
-  default     = "Hello from Terraform!"
+  type = string
 }
