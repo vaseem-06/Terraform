@@ -6,7 +6,7 @@ pipeline {
     }
     environment {
         SLACK_CHANNEL = '#jenkins-integration'   // replace with your channel
-        SLACK_CREDENTIALS = 'slack_integrations'   // Jenkins credential ID for Slack token
+        SLACK_CREDENTIALS = 'slack'   // Jenkins credential ID for Slack token
     }
     stages {
         stage('Checkout SCM') {
