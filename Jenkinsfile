@@ -16,15 +16,9 @@ pipeline {
         }
         stage('Terraform Plan') {
             steps {
-                script {
-                    if (fileExists(env.TFVARS)) {
-                        sh "terraform plan -var-file=${env.TFVARS}"
-                    } else {
-                        sh "terraform plan"
-                    }
-                }
-            }
-        }
+                 sh 'terraform plan -var-file=environment.tfvars'
+    }
+}
         stage('Terraform Apply') {
             steps {
                 script {
