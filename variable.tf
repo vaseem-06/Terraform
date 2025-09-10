@@ -1,8 +1,10 @@
 variable "filename" {
-  description = "The name of the file to create"
+  description = "The name of the file"
   type        = string
+  default     = "book.txt"
 }
 variable "content" {
-  description = "The content to put inside the file"
+  description = "The content of the file"
   type        = string
+  default     = "Hello from Terraform!"
 }
