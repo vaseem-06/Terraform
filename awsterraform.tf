@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        TFVARS = 'environment.tfvars'   // change only here if you rename file
+        TFVARS = 'awsterraform.tfvars'   // change only here if you rename file
     }
     stages {
         stage('Checkout Code') {
