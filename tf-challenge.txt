@@ -1,0 +1,94 @@
+3question in terraofrm challenege
+
+main.tf:
+
+provider "aws" {
+  region = var.aws_region
+}
+
+# Security group allowing SSH + port 8000
+resource "aws_security_group" "allow_ssh_http" {
+  name        = "allow_ssh_http"
+  description = "Allow SSH and HTTP traffic"
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# EC2 instance
+resource "aws_instance" "ubuntu_server" {
+  ami                    = var.ami
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  security_groups        = [aws_security_group.allow_ssh_http.name]
+  user_data              = file("userdata.sh")
+
+  tags = {
+    Name = "CricbuzzDockerServer"
+  }
+}
+
+out.tf:
+
+output "public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.ubuntu_server.public_ip
+}
+
+
+userdata.sh:
+ 
+#!/bin/bash
+# Update system & install Docker
+apt update -y
+apt install -y docker.io
+systemctl start docker
+systemctl enable docker
+
+# Create a folder for the custom HTML
+mkdir -p /home/ubuntu/hello-world
+echo '<!DOCTYPE html>
+<html>
+<head><title>Hello</title></head>
+<body><h1>Hello World</h1></body>
+</html>' > /home/ubuntu/hello-world/index.html
+
+# Run nginx Docker container to serve custom page on port 8000
+docker run -d -p 8000:80 -v /home/ubuntu/hello-world:/usr/share/nginx/html:ro --name hello-world nginx
+
+
+variable.tf:
+
+variable "aws_region" {
+  default = "us-east-1"
+}
+
+variable "ami" {
+  default = "ami-0360c520857e3138f" # Ubuntu 22.04 in us-east-1
+}
+
+variable "instance_type" {
+  default = "t3.micro"
+}
+
+variable "key_name" {
+  default = "newkey" # Replace with your EC2 key pair
+}
